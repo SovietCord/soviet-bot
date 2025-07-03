@@ -1,1 +1,4 @@
-todo: write something useful here
+Install the required pip packages:
+```py
+pip install nextcord dotenv
+```

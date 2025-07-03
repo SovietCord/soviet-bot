@@ -5,9 +5,9 @@ from dotenv import load_dotenv
 import os
 import asyncio
 import aiohttp
+import mariadb
 
 load_dotenv()
-
 discord_token = os.getenv("BOT_TOKEN")
 
 intents = nextcord.Intents.default()
@@ -25,6 +25,8 @@ async def on_ready():
 async def on_message(message):
     if message.content == os.getenv("SECRET"):
         await message.reply(os.getenv("SECRET_RESPONSE"))
+    if message.content.startswith("https://cdn.discordapp.com/") or message.content.startswith("https://tenor.com/"):
+        await message.reply("s/o/viet? :3")
 
 @bot.slash_command(name="ping", description="Pings the bot to check its status")
 async def ping(interaction: nextcord.Interaction):
@@ -53,5 +55,30 @@ async def sovietcordup(interaction: nextcord.Interaction):
 
     await interaction.edit_original_message(embed=embed)
 
+@bot.slash_command(name="stats", description="Display some statistics about SovietCord.")
+async def stats(interaction: nextcord.Interaction):
+    DBcur.execute("SELECT * FROM stats")
+    result = DBcur.fetchone()
+    if result:
+        embed = nextcord.Embed(title="Statistics", description=
+            f"**Total**: {result['numImagesProcessed']}\n" +
+            f"**Sovietize**: {result['sovietize']}\n" +
+            f"**Weirdy**: {result['weirdy']}\n" +
+            f"**Deepfry**: {result['deepfry']}",
+        color=0x409217)
+    else:
+        embed = nextcord.Embed(title="Statistics", description="Nothing to show!", color=0xa80000)
+    await interaction.response.send_message(embed=embed)
 
+try:
+    DBcon = mariadb.connect(
+        user = os.getenv("DB_USER"),
+        password = os.getenv("DB_PASSWORD"),
+        host = os.getenv("DB_HOST"),
+        database = "soviet"
+    )
+except mariadb.error as e:
+    print(f"Error connection to the MariaDB server: {e}")
+    sys.exit(1)
+DBcur = DBcon.cursor(dictionary=True)
 bot.run(discord_token)
